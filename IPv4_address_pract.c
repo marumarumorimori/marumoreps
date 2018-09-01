@@ -38,14 +38,11 @@ init_addr_struct(struct v4address *v4addr,struct v6address *v6addr,unsigned shor
 	for(init_loop=0;init_loop<file_lines;init_loop++){
 		memset(v4addr[init_loop].v4addrs,0x00,sizeof(v4addr[init_loop].v4addrs));
 		memset(v6addr[init_loop].v6addrs,0x00,sizeof(v6addr[init_loop].v6addrs));
-		printf("%s,%s\n",v4addr[init_loop].v4addrs,v6addr[init_loop].v6addrs);
 		v4addr[init_loop].next = &v4addr[init_loop+1];
 		v6addr[init_loop].next = &v6addr[init_loop+1];
 	}
         v4addr[init_loop].next = &v4addr[init_loop+1];
         v6addr[init_loop].next = &v6addr[init_loop+1];
-
-	printf("%s\n",v4addr[0].v4addrs);
 }
 
 
@@ -55,6 +52,8 @@ main(int argc,char *argv[]){
 	int v4_mask = 0;
 	int v6_mask = 0;
 	int i = 0;
+	int j = 0;
+	int k = 0;
 	unsigned short int file_lines = 0;
 	char buff[BUFFER_LENGTH];
 	
@@ -94,11 +93,12 @@ main(int argc,char *argv[]){
 		addr_binary(&v4addr[i],v4_mask);
 	}
 	
-/*
-	int i = 0;
-	for(i=0;i<file_lines;i++){
-		printf("%s\n",v4addr[i].v4addrs);
-	}*/
+	for(j=0;j<file_lines;j++){
+		for(k=0;k<TNO_V4_OCTET-1;k++){
+			printf("%d.",v4addr[j].v4prefix[k]);
+		}
+		printf("%d\n",v4addr[j].v4prefix[TNO_V4_OCTET-1]);
+	}
 	return 0;
 }
 
@@ -114,16 +114,13 @@ file_tkn(struct v4address *v4addr,struct v6address *v6addr){
                 strcpy(ip_addr_type,strtok(buff,":"));
 		if(strcmp(ip_addr_type,"IPv4")==0){
 			strcpy(v4addr[loop].v4addrs,strtok(NULL,"/"));
-			printf("%d:%s\n",loop,v4addr[loop].v4addrs);
 		}else if(strcmp(ip_addr_type,"IPv6")==0){
 			strcpy(v6addr[loop].v6addrs,strtok(NULL,"/"));
-                        printf("%s\n",v6addr[loop].v6addrs);
 		}else{
 			printf("Format is not correct.\n");
 		}
 		loop++;
 	}
-	printf("\n");
 	fclose(fp);
 }
 
@@ -157,14 +154,6 @@ addr_binary(struct v4address *v4addr,int v4_prefix_len){
         subnet_calculation(prefix_len,v4prefix);
         conversion_binary(num_addr,v4prefix,v4addr);
 
-        printf("addr_binary start\n");
-
-        for(loop=0;loop<4;loop++){
-                printf("%d.",v4addr->v4prefix[loop]);
-        }
-	printf("\n");
-	printf("\n");
-
         return 0;
 }
 
@@ -186,15 +175,6 @@ subnet_calculation(int subnet,int ret_v4prefix[]){
                 for(i=1;i<TNO_V4_OCTET;i++){
                         ret_v4prefix[i] = 0;
                 }
-
-                int y = 0;
-                printf("rem<0_start\n");
-                for(y=0;y<TNO_V4_OCTET;y++){
-                        printf("%d\n",ret_v4prefix[y]);
-                }
-
-
-
         }else{
                 for(i=0;i<sbnt_loop;i++){
                         ret_v4prefix[i] = 255;
@@ -202,17 +182,8 @@ subnet_calculation(int subnet,int ret_v4prefix[]){
 
                 j =sbnt_loop;
 
-
                 if(sbnt_loop<TNO_V4_OCTET){
                         ret_v4prefix[j] = two_to_the_pow(sbnt_remainder);
-
-                        int x = 0;
-                        printf("rem>0_start\n");
-                        for(x=0;x<4;x++){
-                                printf("%d.",ret_v4prefix[x]);
-                        }
-			printf("\n");
-
                         if(4 < j){
                                 return 0;
                         }
@@ -228,14 +199,11 @@ subnet_calculation(int subnet,int ret_v4prefix[]){
 int
 conversion_binary(int decimal_num[],int ret_prefix[],struct v4address *v4addr){
         unsigned short int dec_to_bin_loop = 0;
-	printf("conversion_binary_start\n");
+
 	for(dec_to_bin_loop=0;dec_to_bin_loop<TNO_V4_OCTET;dec_to_bin_loop++){
                 v4addr->v4prefix[dec_to_bin_loop] = decimal_num[dec_to_bin_loop] & ret_prefix[dec_to_bin_loop];
-                printf("%d.",v4addr->v4prefix[dec_to_bin_loop]);
         }
-	printf("\n");
-
-        return 0;
+	return 0;
 }
 
 int two_to_the_pow(int remainder){
@@ -251,7 +219,6 @@ int two_to_the_pow(int remainder){
                 }
                 ret = ret + tmp_ret;
         }
-        printf("4oct:%d\n",ret);
         return ret;
 }
 
