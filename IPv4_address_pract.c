@@ -51,9 +51,9 @@ main(int argc,char *argv[]){
 	FILE *fp;
 	int v4_mask = 0;
 	int v6_mask = 0;
-	int i = 0;
-	int j = 0;
-	int k = 0;
+	unsigned short int i = 0;
+	unsigned short int j = 0;
+	unsigned short int k = 0;
 	unsigned short int file_lines = 0;
 	char buff[BUFFER_LENGTH];
 	
@@ -140,9 +140,9 @@ v6prefix(struct v6address *v6addr,int v6_masknum){
 
 int
 addr_binary(struct v4address *v4addr,int v4_prefix_len){
-        int num_addr[4] = {0,0,0,0};
-        int loop = 0;
-        int v4prefix[4] = {0,0,0,0};
+        int num_addr[TNO_V4_OCTET] = {0,0,0,0};
+        unsigned short int loop = 0;
+        int v4prefix[TNO_V4_OCTET] = {0,0,0,0};
         int prefix_len = 0;
 
         num_addr[loop] = atoi(strtok(v4addr->v4addrs,"."));
@@ -162,9 +162,9 @@ subnet_calculation(int subnet,int ret_v4prefix[]){
         int subnet_seed;
         int sbnt_remainder = 0;
         int sbnt_loop = 0;
-        int i = 0;
-        int j = 0;
-        int k = 0;
+        unsigned short int i = 0;
+        unsigned short int j = 0;
+        unsigned short int k = 0;
 
         subnet_seed = subnet - V4_OCTFILL;
         sbnt_remainder = subnet % V4_OCTFILL;
@@ -184,7 +184,7 @@ subnet_calculation(int subnet,int ret_v4prefix[]){
 
                 if(sbnt_loop<TNO_V4_OCTET){
                         ret_v4prefix[j] = two_to_the_pow(sbnt_remainder);
-                        if(4 < j){
+                        if(TNO_V4_OCTET < j){
                                 return 0;
                         }
                 }
@@ -221,4 +221,3 @@ int two_to_the_pow(int remainder){
         }
         return ret;
 }
-
