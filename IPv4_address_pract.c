@@ -2,14 +2,16 @@
 #include <stdlib.h>
 #include <string.h>
 
-#define PATH "input.txt"
+#define PATH_READ "input.txt"
+#define PATH_WRITE "output.txt"
 #define BUFFER_LENGTH 256
 #define V4ADDR_LENGTH 16
 #define V6ADDR_LENGTH 39
 #define ADDRTYPE_LENGTH 4
 
 #define TNO_V4_OCTET 4
-#define V4_OCTFILL 8
+#define V4_OCTET_LENGTH 8
+#define V4_OCTFILL 255 
 
 struct v4address{
 	char v4addrs[V4ADDR_LENGTH];
@@ -24,7 +26,7 @@ struct v6address{
 
 void init_addr_struct(struct v4address *v4addr,struct v6address *v6addr,unsigned short int file_lines);
 void file_tkn(struct v4address *v4addr,struct v6address *v6addr);
-int v4subnetmask(struct v4address *v4addr,int v4_masknum);
+int v4output(struct v4address *v4addr,FILE *fp_write);
 int v6prefix(struct v6address *v6addr,int v6_masknum);
 int addr_binary(struct v4address *v4addr,int v4_prefix_len);
 int conversion_binary(int decimal_num[],int ret_prefix[],struct v4address *v4addr);
@@ -48,7 +50,8 @@ init_addr_struct(struct v4address *v4addr,struct v6address *v6addr,unsigned shor
 
 int
 main(int argc,char *argv[]){
-	FILE *fp;
+	FILE *fp_read;
+	FILE *fp_write;
 	int v4_mask = 0;
 	int v6_mask = 0;
 	unsigned short int i = 0;
@@ -57,19 +60,19 @@ main(int argc,char *argv[]){
 	unsigned short int file_lines = 0;
 	char buff[BUFFER_LENGTH];
 	
-        fp = fopen(PATH,"r");
-        if(fp == NULL){
-                printf("Could not open file:%s\n",PATH);
+        fp_read = fopen(PATH_READ,"r");
+        if(fp_read == NULL){
+                printf("Could not open file:%s\n",PATH_READ);
                 exit(1);
         }else{
-                printf("open file:%s\n",PATH);
+                printf("open file:%s\n",PATH_READ);
         }
 
-        fp = fopen(PATH,"r");
-        while(fgets(buff,BUFFER_LENGTH,fp) != NULL ){
+        fp_read = fopen(PATH_READ,"r");
+        while(fgets(buff,BUFFER_LENGTH,fp_read) != NULL ){
                 file_lines++;
         }
-        fclose(fp);
+        fclose(fp_read);
 
         struct v4address v4addr[file_lines];
         struct v6address v6addr[file_lines];
@@ -88,29 +91,37 @@ main(int argc,char *argv[]){
 
 	v4_mask = atoi(argv[1]);
         v6_mask = atoi(argv[2]);
-	
+
+		
 	for(i=0;i<file_lines;i++){
 		addr_binary(&v4addr[i],v4_mask);
 	}
-	
+
+	fp_write = fopen(PATH_WRITE,"w");	
+	for(j=0;j<file_lines;j++){
+		v4output(&v4addr[j],fp_write);
+	}
+	fclose(fp_write);
+
 	for(j=0;j<file_lines;j++){
 		for(k=0;k<TNO_V4_OCTET-1;k++){
 			printf("%d.",v4addr[j].v4prefix[k]);
 		}
 		printf("%d\n",v4addr[j].v4prefix[TNO_V4_OCTET-1]);
 	}
+
 	return 0;
 }
 
 void
 file_tkn(struct v4address *v4addr,struct v6address *v6addr){
-        FILE *fp;
+        FILE *fp_read;
         unsigned short int loop = 0;
         char buff[BUFFER_LENGTH];
 	char ip_addr_type[ADDRTYPE_LENGTH];
 
-        fp = fopen(PATH,"r");
-        while(fgets(buff,BUFFER_LENGTH,fp) != NULL){
+        fp_read = fopen(PATH_READ,"r");
+        while(fgets(buff,BUFFER_LENGTH,fp_read) != NULL){
                 strcpy(ip_addr_type,strtok(buff,":"));
 		if(strcmp(ip_addr_type,"IPv4")==0){
 			strcpy(v4addr[loop].v4addrs,strtok(NULL,"/"));
@@ -121,12 +132,13 @@ file_tkn(struct v4address *v4addr,struct v6address *v6addr){
 		}
 		loop++;
 	}
-	fclose(fp);
-}
+	fclose(fp_read);
+}	
 
 int 
-v4subnetmask(struct v4address *v4addr,int v4_masknum){
-	
+v4output(struct v4address *v4addr,FILE *fp_write){	
+	fprintf(fp_write,"IPv4\t\t:%s\n",v4addr->v4addrs);
+	fprintf(fp_write,"SUBNETMASK\t:%d.%d.%d.%d\n",v4addr->v4prefix[0],v4addr->v4prefix[1],v4addr->v4prefix[2],v4addr->v4prefix[3]);
 
 	return 0;
 }
@@ -144,8 +156,10 @@ addr_binary(struct v4address *v4addr,int v4_prefix_len){
         unsigned short int loop = 0;
         int v4prefix[TNO_V4_OCTET] = {0,0,0,0};
         int prefix_len = 0;
+	char buffer[BUFFER_LENGTH];
 
-        num_addr[loop] = atoi(strtok(v4addr->v4addrs,"."));
+	strcpy(buffer,v4addr->v4addrs);
+        num_addr[loop] = atoi(strtok(buffer,"."));
         for(loop=1;loop<3;loop++){
                 num_addr[loop] = atoi(strtok(NULL,"."));
         }	
@@ -166,9 +180,9 @@ subnet_calculation(int subnet,int ret_v4prefix[]){
         unsigned short int j = 0;
         unsigned short int k = 0;
 
-        subnet_seed = subnet - V4_OCTFILL;
-        sbnt_remainder = subnet % V4_OCTFILL;
-        sbnt_loop = subnet / V4_OCTFILL;//小数点以下切り捨て
+        subnet_seed = subnet - V4_OCTET_LENGTH;
+        sbnt_remainder = subnet % V4_OCTET_LENGTH;
+        sbnt_loop = subnet / V4_OCTET_LENGTH;//小数点以下切り捨て
 
         if(subnet_seed<0){
                 ret_v4prefix[0] = two_to_the_pow(sbnt_remainder);
@@ -177,11 +191,9 @@ subnet_calculation(int subnet,int ret_v4prefix[]){
                 }
         }else{
                 for(i=0;i<sbnt_loop;i++){
-                        ret_v4prefix[i] = 255;
+                        ret_v4prefix[i] = V4_OCTFILL;
                 }
-
                 j =sbnt_loop;
-
                 if(sbnt_loop<TNO_V4_OCTET){
                         ret_v4prefix[j] = two_to_the_pow(sbnt_remainder);
                         if(TNO_V4_OCTET < j){
