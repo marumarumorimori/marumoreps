@@ -179,7 +179,6 @@ subnet_calculation(int prefix_len,struct v4address *v4addr){
         }
 	for(l=0;l<TNO_V4_OCTET;l++){
 		v4addr->v4subnetmask[l] = tmp_subnet[l];
-		printf("%d : %d\n",v4addr->v4subnetmask[l],tmp_subnet[l]);
 	}
         return 0;
 }
