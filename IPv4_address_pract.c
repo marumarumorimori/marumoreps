@@ -6,7 +6,6 @@
 #define PATH_WRITE "output.txt"
 #define BUFFER_LENGTH 256
 #define V4ADDR_LENGTH 16
-#define V6ADDR_LENGTH 39
 #define ADDRTYPE_LENGTH 4
 
 #define TNO_V4_OCTET 4
@@ -32,9 +31,9 @@ void
 init_addr_struct(struct v4address *v4addr,unsigned short int file_lines){
 	unsigned short int init_loop = 0;
 	for(init_loop=0;init_loop<file_lines;init_loop++){
-		memset(v4addr[init_loop].v4addrs,0x00,sizeof(v4addr[init_loop].v4addrs));
-		memset(v4addr[init_loop].v4prefix,0x00,sizeof(v4addr[init_loop].v4prefix));
-		memset(v4addr[init_loop].v4subnetmask,0x00,sizeof(v4addr[init_loop].v4subnetmask));
+		memset(v4addr[init_loop].v4addrs,0,sizeof(v4addr[init_loop].v4addrs));
+		memset(v4addr[init_loop].v4prefix,0,sizeof(v4addr[init_loop].v4prefix));
+		memset(v4addr[init_loop].v4subnetmask,0,sizeof(v4addr[init_loop].v4subnetmask));
 	}
 }
 
@@ -44,9 +43,9 @@ main(int argc,char *argv[]){
 	FILE *fp_read;
 	FILE *fp_write;
 	int v4_mask = 0;
+	unsigned short int file_lines = 0;
 	unsigned short int i = 0;
 	unsigned short int j = 0;
-	unsigned short int file_lines = 0;
 	char buff[BUFFER_LENGTH];
 	
         fp_read = fopen(PATH_READ,"r");
@@ -70,7 +69,7 @@ main(int argc,char *argv[]){
 		printf("Argument is empty.\n");
 		exit(1);
 	}else{
-		printf("Argument is correct.:Argument=%s\n",argv[1]);
+		printf("Argument is correct:Argument=%s\n",argv[1]);
 	}
 
 	file_tkn(v4addr);
@@ -146,16 +145,15 @@ subnet_calculation(int prefix_len,struct v4address *v4addr){
         unsigned short int i = 0;
         unsigned short int j = 0;
         unsigned short int k = 0;
-	unsigned short int l = 0;
 
         subnet_seed = prefix_len - V4_OCTET_LENGTH;
         sbnt_remainder = prefix_len % V4_OCTET_LENGTH;
 	/*↑ (prefix長/8)の余りの数            */
 	/*255未満のsubnetをとるoctetのprefix長*/
         sbnt_loop = prefix_len / V4_OCTET_LENGTH;
-	/*↑ (prefix長/8)=255が入るoctetの数*/
-	/*int型のため、少数以下切り捨て    */
-
+	/*↑ (prefix長/8)=255が入るoctetの数	     */
+	/*int型のため、少数以下切り捨て   	     */
+	/*gcc (GCC) 4.8.5 20150623 (Red Hat 4.8.5-28)*/
 
         if(subnet_seed<0){
                 tmp_subnet[0] = two_to_the_pow(sbnt_remainder);
@@ -166,19 +164,18 @@ subnet_calculation(int prefix_len,struct v4address *v4addr){
                 for(i=0;i<sbnt_loop;i++){
                         tmp_subnet[i] = V4_OCTFILL;
                 }
-                j =sbnt_loop;
                 if(sbnt_loop<TNO_V4_OCTET){
-                        tmp_subnet[j] = two_to_the_pow(sbnt_remainder);
+                        tmp_subnet[sbnt_loop] = two_to_the_pow(sbnt_remainder);
                         if(TNO_V4_OCTET < j){
                                 return 0;
                         }
                 }
-                for(k=j+1;k<TNO_V4_OCTET;k++){
-                        tmp_subnet[k] = 0;
+                for(j=sbnt_loop+1;j<TNO_V4_OCTET;j++){
+                        tmp_subnet[j] = 0;
                 }
         }
-	for(l=0;l<TNO_V4_OCTET;l++){
-		v4addr->v4subnetmask[l] = tmp_subnet[l];
+	for(k=0;k<TNO_V4_OCTET;k++){
+		v4addr->v4subnetmask[k] = tmp_subnet[k];
 	}
         return 0;
 }
@@ -204,7 +201,7 @@ int two_to_the_pow(int remainder){
         for(i=0;i<remainder;i++){
                 tmp_ret = 1;
 		/*2^7から2^1までを足し算計算*/
- 		/*Σ2^kを8>k>=1の範囲で降順で*/
+ 		/*Σ2^kを8>k>0の範囲で降順で */
 		/*実行する。		    */
                 for(j=0;j<(k=7-i);j++){
                         tmp_ret = 2 * tmp_ret;
