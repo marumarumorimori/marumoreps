@@ -30,7 +30,7 @@ int two_to_the_pow(int remainder);
 void 
 init_addr_struct(struct v4address *v4addr,unsigned short int file_lines){
 	unsigned short int init_loop = 0;
-	for(init_loop=0;init_loop<file_lines;init_loop++){
+	for(init_loop=0;init_loop<file_lines;++init_loop){
 		memset(v4addr[init_loop].v4addrs,0,sizeof(v4addr[init_loop].v4addrs));
 		memset(v4addr[init_loop].v4prefix,0,sizeof(v4addr[init_loop].v4prefix));
 		memset(v4addr[init_loop].v4subnetmask,0,sizeof(v4addr[init_loop].v4subnetmask));
@@ -49,7 +49,7 @@ main(int argc,char *argv[]){
 	char buff[BUFFER_LENGTH];
 	
         fp_read = fopen(PATH_READ,"r");
-        if(fp_read == NULL){
+        if(NULL==fp_read){
                 printf("Could not open file:%s\n",PATH_READ);
                 exit(1);
         }else{
@@ -58,14 +58,14 @@ main(int argc,char *argv[]){
 
         fp_read = fopen(PATH_READ,"r");
         while(fgets(buff,BUFFER_LENGTH,fp_read) != NULL ){
-                file_lines++;
+                ++file_lines;
         }
         fclose(fp_read);
 
         struct v4address v4addr[file_lines];
 	init_addr_struct(v4addr,file_lines);
 
-	if(argc == 1){
+	if(1 == argc){
 		printf("Argument is empty.\n");
 		exit(1);
 	}else{
@@ -76,12 +76,12 @@ main(int argc,char *argv[]){
 
 	v4_mask = atoi(argv[1]);
 
-	for(i=0;i<file_lines;i++){
+	for(i=0;i<file_lines;++i){
 		addr_binary(&v4addr[i],v4_mask);
 	}
 
 	fp_write = fopen(PATH_WRITE,"w");	
-	for(j=0;j<file_lines;j++){
+	for(j=0;j<file_lines;++j){
 		v4output(&v4addr[j],fp_write);
 	}
 	fclose(fp_write);
@@ -99,7 +99,7 @@ file_tkn(struct v4address *v4addr){
         fp_read = fopen(PATH_READ,"r");
         while(fgets(buff,BUFFER_LENGTH,fp_read) != NULL){
                 strcpy(ip_addr_type,strtok(buff,":"));
-		if(strcmp(ip_addr_type,"IPv4")==0){
+		if(0==strcmp(ip_addr_type,"IPv4")){
 			strcpy(v4addr[loop].v4addrs,strtok(NULL,"/"));
 		}else{
 			printf("Format is not correct.\n");
@@ -127,7 +127,7 @@ addr_binary(struct v4address *v4addr,int v4_prefix_len){
 
 	strcpy(buffer,v4addr->v4addrs);
         num_addr[loop] = atoi(strtok(buffer,"."));
-        for(loop=1;loop<3;loop++){
+        for(loop=1;loop<3;++loop){
                 num_addr[loop] = atoi(strtok(NULL,"."));
         }		
         subnet_calculation(v4_prefix_len,v4addr);
@@ -155,13 +155,13 @@ subnet_calculation(int prefix_len,struct v4address *v4addr){
 	/*int型のため、少数以下切り捨て   	     */
 	/*gcc (GCC) 4.8.5 20150623 (Red Hat 4.8.5-28)*/
 
-        if(subnet_seed<0){
+        if(0>subnet_seed){
                 tmp_subnet[0] = two_to_the_pow(sbnt_remainder);
                 for(i=1;i<TNO_V4_OCTET;i++){
                         tmp_subnet[i] = 0;
                 }
         }else{
-                for(i=0;i<sbnt_loop;i++){
+                for(i=0;i<sbnt_loop;++i){
                         tmp_subnet[i] = V4_OCTFILL;
                 }
                 if(sbnt_loop<TNO_V4_OCTET){
@@ -170,11 +170,11 @@ subnet_calculation(int prefix_len,struct v4address *v4addr){
                                 return 0;
                         }
                 }
-                for(j=sbnt_loop+1;j<TNO_V4_OCTET;j++){
+                for(j=sbnt_loop+1;j<TNO_V4_OCTET;++j){
                         tmp_subnet[j] = 0;
                 }
         }
-	for(k=0;k<TNO_V4_OCTET;k++){
+	for(k=0;k<TNO_V4_OCTET;++k){
 		v4addr->v4subnetmask[k] = tmp_subnet[k];
 	}
         return 0;
@@ -184,7 +184,7 @@ int
 conversion_binary(int decimal_num[],struct v4address *v4addr){
         unsigned short int dec_to_bin_loop = 0;
 
-	for(dec_to_bin_loop=0;dec_to_bin_loop<TNO_V4_OCTET;dec_to_bin_loop++){
+	for(dec_to_bin_loop=0;dec_to_bin_loop<TNO_V4_OCTET;++dec_to_bin_loop){
                 v4addr->v4prefix[dec_to_bin_loop] = decimal_num[dec_to_bin_loop] & v4addr->v4subnetmask[dec_to_bin_loop];
         }
 	return 0;
@@ -198,12 +198,12 @@ int two_to_the_pow(int remainder){
 	int k = 0;
         
 	/*2^i計算のループ*/
-        for(i=0;i<remainder;i++){
+        for(i=0;i<remainder;++i){
                 tmp_ret = 1;
 		/*2^7から2^1までを足し算計算*/
  		/*Σ2^kを8>k>0の範囲で降順で */
 		/*実行する。		    */
-                for(j=0;j<(k=7-i);j++){
+                for(j=0;j<(k=7-i);++j){
                         tmp_ret = 2 * tmp_ret;
                 }
                 ret = ret + tmp_ret;
