@@ -8,6 +8,9 @@
 #define ONE_HOUR 3600
 #define TWO_HOUR 7200
 #define INFINITE_LOOP 1
+#define PID_FILE "/root/pract_directory/04_no-ip/update_no-ip.pid"
+#define CURL_COMMAND "curl -s -m 20 YOUR-USERNAME:2134abXDZS@dynupdate.no-ip.com/nic/update?hostname=marumos.ddns.net > /root/pract_directory/04_no-ip/curl_result"
+#define RETRY_CHECK_FILE "/root/pract_directory/04_no-ip/curl_result"
 #define BUFF_LEN 256
 
 int update_curltimer();
@@ -33,7 +36,7 @@ update_curltimer(){
 		sleep(5);
 	}
 	
-	system("curl -s YOUR-USERNAME:password@dynupdate.no-ip.com/nic/update?hostname=domain name > result file");
+	system(CURL_COMMAND);
 	retry_curl();
 	
 	return 0;
@@ -57,7 +60,8 @@ retry_curl(){
 	}
 	fgets(buffer,BUFF_LEN,fp_read);
 	while(0 == strncmp(buffer,"badauth",7)){
-		system("curl -s YOUR-USERNAME:password@dynupdate.no-ip.com/nic/update?hostname=domain name > result file");
+		system(CURL_COMMAND);
+		fgets(buffer,BUFF_LEN,fp_read);
 	}
 
 	fclose(fp_read);
