@@ -8,9 +8,9 @@
 #define ONE_HOUR 3600
 #define TWO_HOUR 7200
 #define INFINITE_LOOP 1
-#define PID_FILE "/root/pract_directory/04_no-ip/update_no-ip.pid"
-#define CURL_COMMAND "curl -s -m 20 YOUR-USERNAME:2134abXDZS@dynupdate.no-ip.com/nic/update?hostname=marumos.ddns.net > /root/pract_directory/04_no-ip/curl_result"
-#define RETRY_CHECK_FILE "/root/pract_directory/04_no-ip/curl_result"
+#define PID_FILE "pid"
+#define CURL_COMMAND "curl -s -m 20 YOUR-USERNAME:password@dynupdate.no-ip.com/nic/update?hostname=domain > result file path
+#define RETRY_CHECK_FILE "result file path"
 #define BUFF_LEN 256
 
 int update_curltimer();
