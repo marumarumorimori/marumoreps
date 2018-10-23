@@ -48,23 +48,23 @@ main(int argc,char *argv[]){
 	}
 
 	ret_check = file_tkn(&start_v4addr,v4addr,new_v4addr);
-	if(1==ret_check){
-		prirtf("File_tkn error.\n");
-		return 1;
+	if(NG==ret_check){
+		printf("File_tkn error.\n");
+		return NG;
 	}
 
 	for(v4addr=&start_v4addr;v4addr->next!=NULL;v4addr=v4addr->next){
 		ret_check = addr_binary(&start_v4addr,v4addr,v4_mask);
-		if(1==ret_check){
-			prirtf("Addr_binary error.\n");
-			return 1;
+		if(NG==ret_check){
+			printf("Addr_binary error.\n");
+			return NG;
 		}
         }
 	
-	ret_check = v4output(&start_v4addr,v4addr)
-	if(1==ret_check){
-		prirtf("V4output error.\n");
-		return 1;
+	ret_check = v4output(&start_v4addr,v4addr);
+	if(NG==ret_check){
+		printf("V4output error.\n");
+		return NG;
 	}
 	
 
@@ -150,15 +150,15 @@ addr_binary(struct v4address *start_v4addr,struct v4address *v4addr,int v4_prefi
 		p_tmp = NULL;
 	}
 	ret_check = subnet_calculation(v4_prefix_len,v4addr);
-	if(1==ret_check){
-		prirtf("Subnet_calculation error.\n");
-		return 1;
+	if(NG==ret_check){
+		printf("Subnet_calculation error.\n");
+		return NG;
 	}
 
 	ret_check = conversion_binary(num_addr,v4addr);
-	if(1==ret_check){
-		prirtf("Conversion_binary error.\n");
-		return 1;
+	if(NG==ret_check){
+		printf("Conversion_binary error.\n");
+		return NG;
 	}
 
         return OK;
