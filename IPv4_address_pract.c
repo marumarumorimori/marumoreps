@@ -34,11 +34,12 @@ int
 main(int argc,char *argv[]){
 	char *p_tolend;
 	int v4_mask = 0;
+	int ret_check = 0;
 	struct v4address start_v4addr;
 	struct v4address *v4addr;
 	struct v4address *new_v4addr;
-
-	if(1 == argc){
+	
+	if(1==argc){
 		printf("Argument is empty.\n");
 		return NG;
 	}else{
@@ -46,13 +47,26 @@ main(int argc,char *argv[]){
 		v4_mask = (int)strtol(argv[1],&p_tolend,10);
 	}
 
-	file_tkn(&start_v4addr,v4addr,new_v4addr);
+	ret_check = file_tkn(&start_v4addr,v4addr,new_v4addr);
+	if(1==ret_check){
+		prirtf("File_tkn error.\n");
+		return 1;
+	}
 
 	for(v4addr=&start_v4addr;v4addr->next!=NULL;v4addr=v4addr->next){
-                addr_binary(&start_v4addr,v4addr,v4_mask);
+		ret_check = addr_binary(&start_v4addr,v4addr,v4_mask);
+		if(1==ret_check){
+			prirtf("Addr_binary error.\n");
+			return 1;
+		}
         }
 	
-	v4output(&start_v4addr,v4addr);
+	ret_check = v4output(&start_v4addr,v4addr)
+	if(1==ret_check){
+		prirtf("V4output error.\n");
+		return 1;
+	}
+	
 
 	free(v4addr);
 	return OK;
@@ -67,7 +81,7 @@ file_tkn(struct v4address *start_v4addr,struct v4address *v4addr,struct v4addres
 	v4addr = start_v4addr;
 	v4addr->next = NULL;
 
-        fp_read = fopen(PATH_READ,"r");
+	fp_read = fopen(PATH_READ,"r");
 	if(NULL==fp_read){
 		printf("Could not open file:%s\n",PATH_READ);
 		return NG;
@@ -122,7 +136,8 @@ v4output(struct v4address *start_v4addr,struct v4address *v4addr){
 
 int
 addr_binary(struct v4address *start_v4addr,struct v4address *v4addr,int v4_prefix_len){
-        int num_addr[TNO_V4_OCTET] = {0,0,0,0};
+        int num_addr[TNO_V4_OCTET];
+	int ret_check = 0;
         unsigned short int loop = 0;
 	char buffer[BUFFER_LENGTH];
 	char *p_tolend_ab;
@@ -134,8 +149,17 @@ addr_binary(struct v4address *start_v4addr,struct v4address *v4addr,int v4_prefi
 		num_addr[loop] = (int)strtol(strtok(p_tmp,"."),&p_tolend_ab,10);
 		p_tmp = NULL;
 	}
-	subnet_calculation(v4_prefix_len,v4addr);
-	conversion_binary(num_addr,v4addr);
+	ret_check = subnet_calculation(v4_prefix_len,v4addr);
+	if(1==ret_check){
+		prirtf("Subnet_calculation error.\n");
+		return 1;
+	}
+
+	ret_check = conversion_binary(num_addr,v4addr);
+	if(1==ret_check){
+		prirtf("Conversion_binary error.\n");
+		return 1;
+	}
 
         return OK;
 }
@@ -194,7 +218,8 @@ conversion_binary(int decimal_num[],struct v4address *v4addr){
 	return OK;
 }
 
-int notfill_subnet_loop(int remainder){
+int
+notfill_subnet_loop(int remainder){
 	int ret = 0;//戻り値
 	int tmp_ret = 1;//2^0の値
 	int i = 0;
