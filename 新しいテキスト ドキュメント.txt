@@ -1,0 +1,47 @@
+138Line int addr_binary(struct v4address *start_v4addr,struct v4address *v4addr,int v4_prefix_len){
+->引数は先頭からinput パラメータを入れていき、その後outputパラメータを入れていくこと。
+
+unsigned short int loop = 0;に関して
+->変数の使用用途によって変える。
+
+192.168.1ac.1
+192
+168
+1
+1
+
+999.999.999.999でもとおる
+->チェック用関数を用意すること。
+
+
+strtolの使い方を...
+->知らない関数はテストプログラムを書く
+
+以下で試してみそ
+	strcpy(buffer,v4addr->v4addrs);
+	for(loop=0;loop<TNO_V4_OCTET;++loop){
+		num_addr[loop] = (int)strtol(strtok(buffer,"."),&p_tolend_ab,10);
+		buffer = NULL;
+	}
+
+
+ subnet_seed = 24 - 8 > 0
+ 
+  subnet_seed<0
+ 192.168.0.1/7
+  OK  0  0  0
+ 
+sbnt_remainder = 23 % 8 = 7 
+int sbnt_loop = 23 / 8 = 2
+
+197Line バグ
+
+236Line tmp_ret->名前が分かりずらい
+
+235Line for(j=0;j<(k=7-i);++j){
+
+97Line free(new_v4addr); 確保できていないメモリは解放できない。
+
+free漏れが多い(以上系処理の終わりの部分)
+
+次回 11/12週 コードとドキュメントと単体項目表
