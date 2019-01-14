@@ -1,0 +1,97 @@
+;=====================================================================
+;踏み台 接続情報
+HOSTADDR = '192.168.0.0'
+USERNAME = 'user'
+PASSWORD = 'password'
+
+;Server 接続情報
+SERVADDR = '192.168.0.0'
+SERVUSER = 'user'
+SERVPASS = 'password'
+;=====================================================================
+
+; コマンドオプション組立て
+COMMAND = HOSTADDR
+strconcat COMMAND ':22 /ssh /2 /auth=password /user='
+strconcat COMMAND USERNAME
+strconcat COMMAND ' /passwd='
+strconcat COMMAND PASSWORD
+
+; 踏み台 接続
+connect COMMAND
+
+
+; server接続コマンド組み立て
+CONN_SERV = 'ssh '
+strconcat CONN_SERV SERVUSER
+strconcat CONN_SERV '@'
+strconcat CONN_SERV SERVADDR
+
+;ここのwaitは必須
+;ないとssh接続コマンド組み立てが間に合わないのか上手くいかない。
+wait ']$'
+
+; server 接続
+sendln CONN_SERV
+
+wait 'password:'
+sendln SERVPASS
+
+; # キャプチャスタート #
+wait ']$'
+sendln 'tcpdump -i ' param2 ' -w ' param3 '_server1.cap'
+
+yesnobox 'tcpdumpを取り終わったら[はい]を押してね！[いいえ]を押しても特に何もないよ！' '終わったー？'
+
+; # ctl+cでキャプチャ終了 #
+if result = 1 then
+	send #3
+else
+	send #3
+	messagebox 'なんにもおきなかったね！' 'いいえを押しても' 
+endif
+
+wait ']$'
+sendln 'mv ' param3 '_server1.cap ' param4
+
+wait ']$'
+sendln 'cd ' param4
+
+
+; # sftpでキャプチャファイルを移動 #
+wait ']$'
+SFTP = 'sftp '
+strconcat SFTP USERNAME
+strconcat SFTP '@'
+strconcat SFTP HOSTADDR
+
+wait ']$'
+sendln SFTP
+
+wait 'password:'
+sendln PASSWORD
+
+wait 'sftp>'
+sendln 'cd ' param5
+
+wait 'sftp>'
+sendln 'pwd'
+
+wait 'sftp>'
+sendln 'put ' param3 '_server1.cap '
+
+wait 'sftp>'
+sendln 'ls'
+
+wait 'sftp>'
+sendln 'exit'
+
+
+; # コンソールを閉じる #
+wait ']$'
+sendln 'exit'
+wait '~]$'
+sendln 'exit'
+
+
+	
