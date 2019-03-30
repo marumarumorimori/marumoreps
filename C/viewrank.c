@@ -27,13 +27,14 @@ struct profiles{
 	int age;
 	int height;
 	int weight;
+	char import_file[FILE_NAME_LENGTH];
 	struct profiles *next_profile;
 };
 
-void *reading_file(void *read_file);
-int parse_data(char *import_data,struct profiles **profs);
+void *reading_file(struct profiles *profile);
+int parse_data(char *import_data, struct profiles *profile);
 static int check_argument(int argc, char ***argv);
-int add_profile(char *parsed_name,int parsed_age, int parsed_height, int parsed_weight, struct profiles ***profs);
+int add_profile(char *parsed_name,int parsed_age, int parsed_height, int parsed_weight, struct profiles *profile);
 
 //ファイル内に限定されたグローバルフラグ
 static int flag_age = 0;
@@ -44,16 +45,17 @@ pthread_mutex_t mutex = PTHREAD_MUTEX_INITIALIZER;
 
 /*import_fileで指定したファイルのデータ読み込み用関数*/
 void
-*reading_file(void *import_file){
+*reading_file(struct profiles *profile){
 	FILE *p_read_file = NULL;
-	struct profile *profs = NULL;
 	char import_data[FILE_READ_BUF_LEN] = "";
 	//関数戻り値チェック用変数
 	int res = 0;
 	char tmp[TMP_BUFFER] = "";
 
-	strncpy(tmp,(char *)import_file, 100);
-	p_read_file = fopen(tmp,"r");
+	printf("%s\n", profile->import_file);
+
+	strncpy(tmp, profile->import_file, 100);
+	p_read_file = fopen(profile->import_file,"r");
 	if(NULL == p_read_file){
 		printf("%s:Could NOT open file.\n",__func__);
 		return NG;
@@ -65,7 +67,7 @@ void
 			return NG;
 		}
 
-		res = parse_data(&import_data, &profs);
+		res = parse_data(import_data, profile);
 		if(NG == res){
 			return NG;
 		}
@@ -76,7 +78,7 @@ void
 }
 
 int
-parse_data(char *import_data,struct profiles **profs){
+parse_data(char *import_data, struct profiles *profile){
 	char data_name[PERSONAL_NAME_LEN] = "";
 	int data_age = 0;
 	int data_height = 0;
@@ -136,42 +138,43 @@ parse_data(char *import_data,struct profiles **profs){
 		return NG;
 	}
 
-	add_profile(&data_name, data_age, data_height, data_weight, &profs);
+	add_profile(data_name, data_age, data_height, data_weight, profile);
 
 	return OK;
 }
 
 int
-add_profile(char *parsed_name,int parsed_age, int parsed_height, int parsed_weight, struct profiles ***profs){
-	struct profiles *head_prof;	
-	struct profiles *tmp_prof;	
-	struct profiles *serch_prof;	
+add_profile(char *parsed_name,int parsed_age, int parsed_height, int parsed_weight, struct profiles *profile){
+	//構造体リスト先頭ポインタ	
+	struct profiles *top_prof;
+	//追加データ一時格納用	
+	struct profiles *new_prof;	
+	//現最後尾(最終更新データ)の構造体
+	struct profiles *prev_prof;	
+	struct profiles *current_prof;	
 
-	//構造体リストのスタートポインタ	
-	head_prof = &profs;
-
+	//topに構造体リストの先頭を退避
+	top_prof = profile;
+	current_prof = profile;
 	//構造体のメモリ確保
-	tmp_prof = (struct profile *)malloc(sizeof(struct profiles));
+	new_prof = (struct profiles *)malloc(sizeof(struct profiles));
 
-	//解析済みデータをtmpに一時格納	
-	strncpy(tmp_prof.name, parsed_name, PERSONAL_NAME_LEN);
-	tmp_prof.age = parsed_age;
-	tmp_prof.height = parsed_height;
-	tmp_prof.weight = parsed_weight;
-	tmp_prof.next_profile = NULL;
+	//解析済みデータをnewに一時格納	
+	strncpy(new_prof->name, parsed_name, PERSONAL_NAME_LEN);
+	new_prof->age = parsed_age;
+	new_prof->height = parsed_height;
+	new_prof->weight = parsed_weight;
+	new_prof->next_profile = NULL;
 
-	if(NULL == head_prof->next_profile){
-		head_prof->next_profile = &tmp_prof;
+	while(current_prof->next_profile != NULL){
+		current_prof = current_prof->next_profile;
+		current_prof->next_profile = NULL;
+		printf("%s\n",current_prof->name);
+		printf("%d\n",current_prof->age);
+		printf("%d\n",current_prof->height);
+		printf("%d\n",current_prof->weight);
 	}
-
-	
-
-	for(serch_prof = head_prof; serch_prof->next_profile != NULL; serch_prof=serch_prof->next_profile){
-		printf("%s\n",serch_prof->name);
-		printf("%d\n",serch_prof->age);
-		printf("%d\n",serch_prof->height);
-		printf("%d\n",serch_prof->weight);
-	}
+	current_prof->next_profile = new_prof;
 
 	return OK;
 }
@@ -201,7 +204,7 @@ check_argument(int argc, char ***argv){
 
 int
 main(int argc,char *argv[]){
-	char import_file[FILE_NAME_LENGTH] = "";
+	struct profiles *profile = NULL;
 	char export_file[FILE_NAME_LENGTH] = "";
 	//第三引数オプション用変数
 	char options[OPTION_LENGTH] = "";
@@ -215,17 +218,21 @@ main(int argc,char *argv[]){
 		printf("Invalid argument.\n");
 		return NG;
 	}
+	profile = (struct profiles *)malloc(sizeof(struct profiles));
+	profile->next_profile = NULL;
+
 	//argumentを各変数に割り振る
-	strncpy(import_file, argv[FIRST_ARG], FILE_NAME_LENGTH);
+	strncpy(profile->import_file, argv[FIRST_ARG], FILE_NAME_LENGTH);
 	strncpy(export_file, argv[SECOND_ARG], FILE_NAME_LENGTH);
 	strncpy(options, argv[THIRD_ARG], OPTION_LENGTH);
 	
 	//file読み取りをスレッドで並列処理
-	pthread_mutex_init(&mutex,NULL);
-	thread_status = pthread_create(&pthread, NULL, &reading_file, &import_file);
+	thread_status = pthread_create(&pthread, NULL, &reading_file, profile);
 	
 
 	pthread_join(pthread, NULL);
+
+	free(profile);
 
 	return OK;
 }
