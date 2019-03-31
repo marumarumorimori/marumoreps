@@ -247,7 +247,6 @@ int
 main(int argc,char *argv[]){
 	struct profiles *profile = NULL;
 	char export_file[FILE_NAME_LENGTH] = "";
-	//第三引数オプション用変数
 	pthread_t pthread;
 	int thread_status = 0;
 	//戻り値チェック用変数
@@ -282,7 +281,8 @@ main(int argc,char *argv[]){
 	pthread_join(pthread, NULL);
 
 	//sort処理
-	
+
+	//構造体リストオールクリア	
 	structure_memory_free(profile);
 
 	return OK;
