@@ -189,16 +189,6 @@ check_argument(int argc, char ***argv){
 		return NG;
 	}
 
-	//起こりえないエラーの可能性がある
-	//確実に発生しないと確認でき次第以下の処理を消去
-	for(loop=0; loop<argc; ++loop){
-		if(NULL == argv){
-			printf("%s: Invalid argument. argv[%d]\n",__func__,loop);
-			return NG;
-		}
-		++argv;
-	}
-
 	return OK;
 }
 
@@ -215,30 +205,31 @@ get_option(int argc, char *argv){
 							{ 0,			0,					0,		 0  }
 							};
 
-	while (-1 != (opt = getopt_long(argc, argv, "123h:", longopts, &index))){
+	while (-1 != (opt = getopt_long(argc, argv, "123h", longopts, &index))){
 		switch(opt){
 			case '1':
 				printf("opt:1\n");
+				flag_age = 1;
 				break;
 			case '2':
 				printf("opt:2\n");
+				flag_height = 1; 
 				break;
 			case '3':
 				printf("opt:3\n");
+				flag_weight = 1;
 				break;
 			case 'h':
 				printf("opt:h\n");
 				break;
 			default:
-				printf("opt:none\n");
+				printf("Invalid argument.\n");
 				break;
 
 		}
 	}
-
 	return OK;
 }
-
 
 int
 main(int argc,char *argv[]){
@@ -272,20 +263,25 @@ main(int argc,char *argv[]){
 		return NG;
 	}
 
-	//getopt_long
+	//オプション読み込み
 	get_option(argc, argv);
 
+	//reading_file()スレッド合流
 	pthread_join(pthread, NULL);
 
 	//debug用 !削除対象!
 	current_prof = profile;
-	while(current_prof->next_profile != NULL){
+	while(NULL != current_prof->next_profile){
 		current_prof = current_prof->next_profile;
 		printf("%s\n",current_prof->name);
 		printf("%f\n",current_prof->age);
 		printf("%f\n",current_prof->height);
 		printf("%f\n",current_prof->weight);
 	}
+
+	printf("%d\n",flag_age);
+	printf("%d\n",flag_height);
+	printf("%d\n",flag_weight);
 
 	free(profile);
 
