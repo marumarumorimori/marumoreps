@@ -179,18 +179,6 @@ add_profile(char *parsed_name, float parsed_age, float parsed_height, float pars
 	return OK;
 }
 
-//異常系考慮用関数
-static int
-check_argument(int argc, char ***argv){
-	int loop = 0;
-	
-	if(NUMOF_ALLOPTIONS != argc){
-		printf("%s: Insufficient arguments\n",__func__);
-		return NG;
-	}
-
-	return OK;
-}
 
 //コマンド解析用関数
 int
@@ -208,19 +196,16 @@ get_option(int argc, char *argv){
 	while (-1 != (opt = getopt_long(argc, argv, "123h", longopts, &index))){
 		switch(opt){
 			case '1':
-				printf("opt:1\n");
 				flag_age = 1;
 				break;
 			case '2':
-				printf("opt:2\n");
 				flag_height = 1; 
 				break;
 			case '3':
-				printf("opt:3\n");
 				flag_weight = 1;
 				break;
 			case 'h':
-				printf("opt:h\n");
+				//help表示処理追加予定
 				break;
 			default:
 				printf("Invalid argument.\n");
@@ -228,6 +213,16 @@ get_option(int argc, char *argv){
 
 		}
 	}
+	return OK;
+}
+
+static int
+check_argument(int argc, char ***argv){
+	if(NUMOF_ALLOPTIONS != argc){
+		printf("%s: Insufficient arguments\n",__func__);
+		return NG;
+	}
+
 	return OK;
 }
 
@@ -278,7 +273,6 @@ main(int argc,char *argv[]){
 		printf("%f\n",current_prof->height);
 		printf("%f\n",current_prof->weight);
 	}
-
 	printf("%d\n",flag_age);
 	printf("%d\n",flag_height);
 	printf("%d\n",flag_weight);
