@@ -3,6 +3,7 @@
 #include <stdlib.h>
 #include <string.h>
 #include <pthread.h>	//コンパイル時-pthreadを忘れないこと！
+#include <getopt.h>
 
 //OPTIONS_CHARACTERはソート方法選択時のgetopt用		
 #define	OPTIONS_CHARACTER	"123:"
@@ -21,12 +22,13 @@
 #define	OK					0
 #define	NG					1
 #define	STRTOK_R_OK			0
+#define	THREAD_CREATE_OK	0
 
 struct profiles{
 	char name[PERSONAL_NAME_LEN];
-	int age;
-	int height;
-	int weight;
+	float age;
+	float height;
+	float weight;
 	char import_file[FILE_NAME_LENGTH];
 	struct profiles *next_profile;
 };
@@ -34,7 +36,8 @@ struct profiles{
 void *reading_file(struct profiles *profile);
 int parse_data(char *import_data, struct profiles *profile);
 static int check_argument(int argc, char ***argv);
-int add_profile(char *parsed_name,int parsed_age, int parsed_height, int parsed_weight, struct profiles *profile);
+int add_profile(char *parsed_name,float parsed_age, float parsed_height, float parsed_weight, struct profiles *profile);
+int get_option(int argc, char *options);
 
 //ファイル内に限定されたグローバルフラグ
 static int flag_age = 0;
@@ -52,9 +55,7 @@ void
 	int res = 0;
 	char tmp[TMP_BUFFER] = "";
 
-	printf("%s\n", profile->import_file);
-
-	strncpy(tmp, profile->import_file, 100);
+	strncpy(tmp, profile->import_file, FILE_NAME_LENGTH);
 	p_read_file = fopen(profile->import_file,"r");
 	if(NULL == p_read_file){
 		printf("%s:Could NOT open file.\n",__func__);
@@ -77,12 +78,14 @@ void
 	return OK;
 }
 
+
+//ごちゃごちゃしているので共通処理を新規関数におこせないか要検討
 int
 parse_data(char *import_data, struct profiles *profile){
 	char data_name[PERSONAL_NAME_LEN] = "";
-	int data_age = 0;
-	int data_height = 0;
-	int data_weight = 0;
+	float data_age = 0;
+	float data_height = 0;
+	float data_weight = 0;
 	char *saveptr = NULL; //strtok_rの処理状況を保存する変数
 	char *excluded_char = NULL;	
 	int format_incorrect = 0;	//不正なフォーマットの検出に使用
@@ -144,20 +147,19 @@ parse_data(char *import_data, struct profiles *profile){
 }
 
 int
-add_profile(char *parsed_name,int parsed_age, int parsed_height, int parsed_weight, struct profiles *profile){
-	//構造体リスト先頭ポインタ	
-	struct profiles *top_prof;
+add_profile(char *parsed_name, float parsed_age, float parsed_height, float parsed_weight, struct profiles *profile){
 	//追加データ一時格納用	
 	struct profiles *new_prof;	
 	//現最後尾(最終更新データ)の構造体
-	struct profiles *prev_prof;	
 	struct profiles *current_prof;	
 
-	//topに構造体リストの先頭を退避
-	top_prof = profile;
 	current_prof = profile;
-	//構造体のメモリ確保
+	//データ追加用の構造体メモリを確保
 	new_prof = (struct profiles *)malloc(sizeof(struct profiles));
+	if(NULL == new_prof){
+		printf("%s: Failed to get dynamic memory.\n",__func__);	
+		return NG;
+	}
 
 	//解析済みデータをnewに一時格納	
 	strncpy(new_prof->name, parsed_name, PERSONAL_NAME_LEN);
@@ -166,14 +168,12 @@ add_profile(char *parsed_name,int parsed_age, int parsed_height, int parsed_weig
 	new_prof->weight = parsed_weight;
 	new_prof->next_profile = NULL;
 
+	//最後尾の構造体まで移動
 	while(current_prof->next_profile != NULL){
 		current_prof = current_prof->next_profile;
-		current_prof->next_profile = NULL;
-		printf("%s\n",current_prof->name);
-		printf("%d\n",current_prof->age);
-		printf("%d\n",current_prof->height);
-		printf("%d\n",current_prof->weight);
 	}
+	
+	//最後尾のcurrent_profに追加データを紐付ける
 	current_prof->next_profile = new_prof;
 
 	return OK;
@@ -202,19 +202,59 @@ check_argument(int argc, char ***argv){
 	return OK;
 }
 
+//コマンド解析用関数
+int
+get_option(int argc, char *argv){
+	int opt = 0;
+	int index = 0;
+	struct option longopts[] = {
+							{"age-sort",	no_argument,		NULL,	'1' },
+							{"height-sort",	no_argument,		NULL,	'2' },
+							{"weight-sort",	no_argument,		NULL,	'3' },
+							{"help",		no_argument,		NULL,	'h' },
+							{ 0,			0,					0,		 0  }
+							};
+
+	while (-1 != (opt = getopt_long(argc, argv, "123h:", longopts, &index))){
+		switch(opt){
+			case '1':
+				printf("opt:1\n");
+				break;
+			case '2':
+				printf("opt:2\n");
+				break;
+			case '3':
+				printf("opt:3\n");
+				break;
+			case 'h':
+				printf("opt:h\n");
+				break;
+			default:
+				printf("opt:none\n");
+				break;
+
+		}
+	}
+
+	return OK;
+}
+
+
 int
 main(int argc,char *argv[]){
 	struct profiles *profile = NULL;
 	char export_file[FILE_NAME_LENGTH] = "";
 	//第三引数オプション用変数
-	char options[OPTION_LENGTH] = "";
 	pthread_t pthread;
 	int thread_status = 0;
 	//戻り値チェック用変数
-	int res = 0;
+	int arg_res = 0;
 
-	res = check_argument(argc, &argv);
-	if(NG == res){
+	//debug用 !削除対象!
+	struct profiles *current_prof;	
+
+	arg_res = check_argument(argc, &argv);
+	if(NG == arg_res){
 		printf("Invalid argument.\n");
 		return NG;
 	}
@@ -224,13 +264,28 @@ main(int argc,char *argv[]){
 	//argumentを各変数に割り振る
 	strncpy(profile->import_file, argv[FIRST_ARG], FILE_NAME_LENGTH);
 	strncpy(export_file, argv[SECOND_ARG], FILE_NAME_LENGTH);
-	strncpy(options, argv[THIRD_ARG], OPTION_LENGTH);
 	
 	//file読み取りをスレッドで並列処理
 	thread_status = pthread_create(&pthread, NULL, &reading_file, profile);
-	
+	if(THREAD_CREATE_OK != thread_status){
+		printf("Could not create thread.\n");
+		return NG;
+	}
+
+	//getopt_long
+	get_option(argc, argv);
 
 	pthread_join(pthread, NULL);
+
+	//debug用 !削除対象!
+	current_prof = profile;
+	while(current_prof->next_profile != NULL){
+		current_prof = current_prof->next_profile;
+		printf("%s\n",current_prof->name);
+		printf("%f\n",current_prof->age);
+		printf("%f\n",current_prof->height);
+		printf("%f\n",current_prof->weight);
+	}
 
 	free(profile);
 
