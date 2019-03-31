@@ -13,7 +13,8 @@
 #define	FIRST_ARG			1
 #define	SECOND_ARG			2
 #define	THIRD_ARG			3
-#define	NUMOF_ALLOPTIONS	4	//argv[0]=viewrank込みの配列長	
+#define	NUMOF_ALLOPTIONS	4	//argv[0]=viewrank込みの配列長
+#define OPTIONS_LEN			6	//sort用引数の最大文字列長
 #define	FILE_READ_BUF_LEN	80
 #define	FORMAT_IMPORT_CHECK	12
 #define TMP_BUFFER			80
@@ -38,6 +39,7 @@ int parse_data(char *import_data, struct profiles *profile);
 static int check_argument(int argc, char ***argv);
 int add_profile(char *parsed_name,float parsed_age, float parsed_height, float parsed_weight, struct profiles *profile);
 int get_option(int argc, char *options);
+int structure_memory_free(struct profiles *profile);
 
 //ファイル内に限定されたグローバルフラグ
 static int flag_age = 0;
@@ -58,19 +60,19 @@ void
 	strncpy(tmp, profile->import_file, FILE_NAME_LENGTH);
 	p_read_file = fopen(profile->import_file,"r");
 	if(NULL == p_read_file){
-		printf("%s:Could NOT open file.\n",__func__);
-		return NG;
+		printf("%s:Could not open file.\n",__func__);
+		exit(NG);
 	}
 	
 	//\0末端考慮のためFILE_READ_BUF_LEN-1を1行の読み取り上限としている
 	while(NULL != fgets(import_data, FILE_READ_BUF_LEN-1, p_read_file)){
 		if( NULL == import_data){
-			return NG;
+			exit(NG);
 		}
 
 		res = parse_data(import_data, profile);
 		if(NG == res){
-			return NG;
+			exit(NG);
 		}
 	}
 	fclose(p_read_file);
@@ -227,6 +229,21 @@ check_argument(int argc, char ***argv){
 }
 
 int
+structure_memory_free(struct profiles *profile){
+	struct profiles *clear_prof = NULL;
+	struct profiles *next_clear = NULL;
+
+	clear_prof = profile;
+
+	while(NULL != clear_prof->next_profile){
+		next_clear = clear_prof->next_profile;
+		free(clear_prof);
+		clear_prof = next_clear;
+	}
+	return OK;
+}
+
+int
 main(int argc,char *argv[]){
 	struct profiles *profile = NULL;
 	char export_file[FILE_NAME_LENGTH] = "";
@@ -236,14 +253,14 @@ main(int argc,char *argv[]){
 	//戻り値チェック用変数
 	int arg_res = 0;
 
-	//debug用 !削除対象!
-	struct profiles *current_prof;	
-
 	arg_res = check_argument(argc, &argv);
 	if(NG == arg_res){
 		printf("Invalid argument.\n");
 		return NG;
 	}
+
+	//ファイルデータ格納用の構造体
+	//スレッドから構造体リストの先頭を返してもらうためにここで宣言
 	profile = (struct profiles *)malloc(sizeof(struct profiles));
 	profile->next_profile = NULL;
 
@@ -264,20 +281,9 @@ main(int argc,char *argv[]){
 	//reading_file()スレッド合流
 	pthread_join(pthread, NULL);
 
-	//debug用 !削除対象!
-	current_prof = profile;
-	while(NULL != current_prof->next_profile){
-		current_prof = current_prof->next_profile;
-		printf("%s\n",current_prof->name);
-		printf("%f\n",current_prof->age);
-		printf("%f\n",current_prof->height);
-		printf("%f\n",current_prof->weight);
-	}
-	printf("%d\n",flag_age);
-	printf("%d\n",flag_height);
-	printf("%d\n",flag_weight);
-
-	free(profile);
+	//sort処理
+	
+	structure_memory_free(profile);
 
 	return OK;
 }
