@@ -37,7 +37,8 @@ main(void){
                     break;
                 case CONVERSION_TO_INT:
                     itmp = strtol(tmp, &endptr, 10);
-                    if((0 != strncmp("\n", endptr, 256) && (NUM_OF_COLUMNS == (loop+1))) /*|| (0 != *endptr)*/){
+                    if((0 != strncmp("\n", endptr, 256) && (NUM_OF_COLUMNS == (loop+1))) 
+                                || ((0 != *endptr) && (NUM_OF_COLUMNS > (loop+1)))){
                         printf("ERROR1:%s\n", endptr);
                         return 1;
                     }
