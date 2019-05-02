@@ -6,74 +6,62 @@
 
 class Account{
     private:
-        std::string account_name;
-        std::string account_id;
-        std::string account_remarks;
+        std::string name_;
+        std::string id_;
+        std::string remarks_;
     public:
-        Account(std::string name="", std::string remarks=""){
-            account_name = name;
-            account_remarks = remarks;
-            account_id = create_uuid();
-        }
+        Account(){};
+        Account(const std::string& name,
+                const std::string& id, 
+                const std::string& remarks)
+            :name_{name}, id_{id}, remarks_{remarks}{};
 
-        //For comparison operator function calls.
-        //Account(){}
-
-        std::string create_uuid(){
-            uuid_t uuid;
-            char string[32];
-
-            uuid_generate(uuid);
-            uuid_unparse_upper(uuid, string);
-
-            std::string st_string(string, 32);
-
-            printf("Your key is \"%s\"\n", st_string.c_str());
-
-            return st_string;
-        }
-
-        std::string get_account_name(){
-            return account_name;
-        }
-        
-        std::string get_account_remarks(){
-            return account_remarks;
-        }
-        
-        std::string get_account_id(){
-            return account_id;
-        }
-        
-        bool operator<(const Account &rhs) const{
-            return account_id < rhs.account_id;
-        }
-
+        const std::string& get_name() const noexcept{ return name_; } 
+        const std::string get_remarks() const noexcept{ return remarks_; }
+        const std::string get_id() const noexcept{ return id_; }
 };
+
+std::string create_uuid(){
+    uuid_t uuid;
+    char string[32];
+
+    uuid_generate(uuid);
+    uuid_unparse_upper(uuid, string);
+
+    std::string st_string(string, 32);
+
+    printf("Your key is \"%s\"\n", st_string.c_str());
+
+    return st_string;
+}
 
 int main(void){
     std::string name = "";
     std::string remarks = "";
+    std::string id = "";
     std::string key = "";
     std::map<std::string, Account> account_map;
     int loop = 0;
 
     for(loop=0; 2>loop; ++loop){
-        //Get account_name here.
+        //Get name_ here.
         printf("Please enter name :");
         std::getline(std::cin, name);
 
-        //Get account_remark here.
+        //Get remark_ here.
         printf("Please enter remarks :");
         std::getline(std::cin, remarks);
 
+        //Get id_ here.
+        id = create_uuid();
+
         //Pass account_name and account_remark to class Account.
-        Account account(name, remarks);
-        account_map.insert(std::make_pair(account.get_account_id() ,account));
+        Account account(name, id, remarks);
+        account_map.insert(std::make_pair(account.get_id() ,account));
 
         //Standard output data.
-        printf("Name\t:%s\n", account.get_account_name().c_str());
-        printf("Remarks\t:%s\n", account.get_account_remarks().c_str());
+        printf("Name\t:%s\n", account.get_name().c_str());
+        printf("Remarks\t:%s\n", account.get_remarks().c_str());
         printf("\n");
     }
 
@@ -82,9 +70,15 @@ int main(void){
     std::cin >> key;
     
     //Show result.
-    printf("Name :%s\nRemarks :%s\n",account_map[key].get_account_name().c_str(), 
-                account_map[key].get_account_remarks().c_str());
-  
+    std::map<std::string, Account>::iterator result = account_map.find(key);
+
+    if(result != account_map.end()){
+        printf("Name :%s\nRemarks :%s\n",result->second.get_name().c_str(), 
+                    result->second.get_remarks().c_str());
+    }else{
+        printf("Key Error.\n");
+    }
+    
     return 0;
 }
 
