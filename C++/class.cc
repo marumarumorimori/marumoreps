@@ -50,6 +50,7 @@ int create_account(std::map<std::string, Account>& account_map){
     int loop = 0;
 
     for(loop=0; 2>loop; ++loop){
+        printf("----------------------------------------------\n");
         //Get name_ here.
         printf("Please enter name :");
         std::getline(std::cin, name);
@@ -66,12 +67,12 @@ int create_account(std::map<std::string, Account>& account_map){
         account_map.insert(std::make_pair(account.get_id() ,account));
 
         //Standard output data.
-        printf("----------------------------------------------");
+        printf("----------------------------------------------\n");
         printf("Name\t:%s\n", account.get_name().c_str());
         printf("Remarks\t:%s\n", account.get_remarks().c_str());
         printf("\n");
     }
-    printf("----------------------------------------------");
+    printf("----------------------------------------------\n");
 
     return OK;
 }
