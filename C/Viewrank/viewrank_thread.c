@@ -1,5 +1,6 @@
 #include "viewrank.h"
 
+
 /*import_fileで指定したファイルのデータ読み込み用関数*/
 void
 *reading_file(struct profiles *profile){
