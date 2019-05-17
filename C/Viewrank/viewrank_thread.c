@@ -8,10 +8,9 @@ void
     char import_data[FILE_READ_BUF_LEN] = "";
     //関数戻り値チェック用変数
     int res = 0;
-    char tmp[TMP_BUFFER] = "";
 
-    strncpy(tmp, profile->import_file, FILE_NAME_LENGTH);
-    p_read_file = fopen(profile->import_file,"r");
+    printf("read_file:%s\n", profile->import_file);
+    p_read_file = fopen(profile->import_file, "r");
     if(NULL == p_read_file){
         printf("%s:Could not open file.\n",__func__);
         exit(NG);
@@ -19,17 +18,19 @@ void
     //\0末端考慮のためFILE_READ_BUF_LEN-1を1行の読み取り上限としている
     while(NULL != fgets(import_data, FILE_READ_BUF_LEN-1, p_read_file)){
         if( NULL == import_data){
-            exit(NG);
+            pthread_exit(NULL);
         }
 
         res = parse_data(import_data, profile);
         if(NG == res){
-            exit(NG);
+            pthread_exit(NULL);
         }
     }
     fclose(p_read_file);
 
-    return OK;
+    printf("%s\n", profile->next_profile->name);
+
+    pthread_exit(NULL);
 }
 
 int
@@ -130,11 +131,116 @@ add_profile(char *parsed_name, float parsed_age, float parsed_height, float pars
     return OK;
 }
 
-
-int 
+struct profiles* 
 sort_age(struct profiles *profile){
+    struct profiles *prof_asc_head, *raw_prof;
+    struct profiles *max, *prev_max, *prev_cmp;
+    
+    raw_prof = profile;
+    prof_asc_head = NULL;
+    
+    while(NULL != raw_prof){
+        max = raw_prof;
+        prev_max = NULL;
+        prev_cmp = raw_prof;
+        while(NULL != prev_cmp->next_profile){
+            if((prev_cmp->next_profile)->age > max->age){
+                max = prev_cmp->next_profile;
+                prev_max = prev_cmp;
+            }
+            prev_cmp = prev_cmp->next_profile;
+        }
+        
+        if(NULL == prev_max){
+            raw_prof = max->next_profile;
+        }else{
+            prev_max->next_profile = max->next_profile;
+        }
 
+        if(NULL == prof_asc_head){
+            prof_asc_head = max;
+            max->next_profile = NULL;
+        }else{
+            max->next_profile = prof_asc_head;
+            prof_asc_head = max;
+        }
+    }
 
+    return prof_asc_head;
+}
 
-    return OK;
+struct profiles*  
+sort_height(struct profiles *profile){
+    struct profiles *prof_asc_head, *raw_prof;
+    struct profiles *max, *prev_max, *prev_cmp;
+
+    raw_prof = profile;
+    prof_asc_head = NULL;
+
+    while(NULL != raw_prof){
+        max = raw_prof;
+        prev_max = NULL;
+        prev_cmp = raw_prof;
+        while(NULL != prev_cmp->next_profile){
+            if((prev_cmp->next_profile)->height < max->height){
+                max = prev_cmp->next_profile;
+                prev_max = prev_cmp;
+            }
+            prev_cmp = prev_cmp->next_profile;
+        }
+
+        if(NULL == prev_max){
+            raw_prof = max->next_profile;
+        }else{
+            prev_max->next_profile = max->next_profile;
+        }
+
+        if(NULL == prof_asc_head){
+            prof_asc_head = max;
+            max->next_profile = NULL;
+        }else{
+            max->next_profile = prof_asc_head;
+            prof_asc_head = max;
+        }
+    }
+
+    return prof_asc_head;
+}
+
+struct profiles*
+sort_weight(struct profiles *profile){
+    struct profiles *prof_asc_head, *raw_prof;
+    struct profiles *max, *prev_max, *prev_cmp;
+
+    raw_prof = profile;
+    prof_asc_head = NULL;
+
+    while(NULL != raw_prof){
+        max = raw_prof;
+        prev_max = NULL;
+        prev_cmp = raw_prof;
+        while(NULL != prev_cmp->next_profile){
+            if((prev_cmp->next_profile)->height > max->height){
+                max = prev_cmp->next_profile;
+                prev_max = prev_cmp;
+            }
+            prev_cmp = prev_cmp->next_profile;
+        }
+
+        if(NULL == prev_max){
+            raw_prof = max->next_profile;
+        }else{
+            prev_max->next_profile = max->next_profile;
+        }
+
+        if(NULL == prof_asc_head){
+            prof_asc_head = max;
+            max->next_profile = NULL;
+        }else{
+            max->next_profile = prof_asc_head;
+            prof_asc_head = max;
+        }
+    }
+
+    return prof_asc_head;
 }
