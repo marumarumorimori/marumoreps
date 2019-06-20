@@ -4,6 +4,9 @@
 #include <string>
 #include <iostream>
 #include <map>
+#include <limits.h>
+#include <stdlib.h>
+#include <string.h>
 
 std::vector<std::string> split(const std::string &str, char separator){
     std::vector<std::string> vect;
@@ -41,12 +44,41 @@ bool search_user_name_failure(std::string &line_element, bool failed_user_name){
     return false;
 }
 
+bool str_to_int(const char *str_num, int &ret_num){
+    char *endptr = NULL;
+    long l_number = strtol(str_num, &endptr, 10);
+ 
+    if(0 != strncmp("\0", endptr, 1)){
+        std::cout << "Conversion error. [" << *endptr << "]" << std::endl;
+        std::cout << "In :" << &str_num <<std::endl;
+        std::cout << "Err:" << &endptr <<std::endl;
+        return false;
+    }
+    
+    if(INT_MAX < l_number ||  INT_MIN > l_number){
+        std::cout << "Buffer over flow." << std::endl;
+        return false;
+    }
+
+    std::cout << "In :" << str_num <<std::endl;
+    std::cout << "Err:" << endptr <<std::endl;
+
+    ret_num = (int)l_number;
+    return true;
+}
+
 int main(int argc, char **argv){
     std::string file_line; 
     std::vector<std::string> list;
     std::map<std::string, std::string> log_map_data;
-    int limit = atoi(argv[2]);
+    int limit = 0;
     int count = 0;
+    bool ret = false;
+
+    ret = str_to_int(argv[2], limit);
+    if(false == ret){
+        return 1;
+    }
 
     std::ifstream ifs(argv[1]);
     if(ifs.fail()){
@@ -67,7 +99,7 @@ int main(int argc, char **argv){
             if(failed_msg_flag){
                 if(!failed_user_name && 11 == loop){
                     log_map_data["IP Address"] = list_element;
-                    std::cout << "IP Address : " << log_map_data["IP Address"] << std::endl;
+                    std::cout << "IP Address : " << log_map_data["IP Address"] <<  std::endl;
                 }else if(failed_user_name && 11 == loop){
                     log_map_data["User Name"] = list_element;
                     std::cout << "User Name : " << log_map_data["User Name"] << std::endl;
