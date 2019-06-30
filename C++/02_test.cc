@@ -81,25 +81,13 @@ bool str_to_int(const char *str_num, int &int_number){
     return true;
 }
 
-int main(int argc, char **argv){
+int parse_secure_log(char *file_name, int limit){
+    int count = 0;
     std::string file_line; 
     std::vector<std::string> list;
     std::map<std::string, std::string> log_map_data;
-    int limit = 0;
-    int count = 0;
-    bool ret = false;
 
-    if((NULL == argv[1]) || (NULL == argv[2])){
-        std::cout << "Argument error." <<std::endl;
-        return false;
-    }
-
-    ret = str_to_int(argv[2], limit);
-    if(false == ret){
-        return 1;
-    }
-
-    std::ifstream ifs(argv[1]);
+    std::ifstream ifs(file_name);
     if(ifs.fail()){
         std::cerr << "Could not read file." << std::endl;
         return 1;
@@ -129,7 +117,25 @@ int main(int argc, char **argv){
             break;
         }
         ++count;
-    } 
+    }
+    return 0;
+}
+
+int main(int argc, char **argv){
+    int limit = 0;
+    bool ret = false;
+
+    if((NULL == argv[1]) || (NULL == argv[2])){
+        std::cout << "Argument error." <<std::endl;
+        return false;
+    }
+
+    ret = str_to_int(argv[2], limit);
+    if(false == ret){
+        return 1;
+    }
+
+    parse_secure_log(argv[1], limit);
 
     return 0;
 }
