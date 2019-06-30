@@ -17,13 +17,28 @@ typedef struct connection_info{
 
 class SecureLogReader{
     public:
-
+        SecureLogReader(){};
+        SecureLogReader(std::string access_status, int sshd_id, std::string user_name, 
+                        int num_of_su_failed, std::string ip_address, int client_port, 
+                        std::string ssh_version, bool su_login = NULL, 
+                        std::string terminal = "none"):
+                        access_status_{access_status}, sshd_id_{sshd_id}, terminal_{terminal},
+                        user_name_{user_name}, su_login_{su_login}, 
+                        num_of_su_failed_{num_of_su_failed}, ip_address_{ip_address},
+                        client_port_{client_port}, ssh_version_{ssh_version}{};
+                    
     protected:
 
     private:
+        std::string         access_status_;
+        int                 sshd_id_;
+        std::string         terminal_;
+        std::string         user_name_;
+        bool                su_login_;
+        int                 num_of_su_failed_;
         std::string         ip_address_;
-        
-
+        int                 client_port_;
+        std::string         ssh_version_;
 };
 
 std::vector<std::string> split(const std::string &str, char separator){
